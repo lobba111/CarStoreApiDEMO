@@ -1,0 +1,110 @@
+﻿@page "/AdminDashBoard"
+@using Blazorise
+@using CarStoreBlazoeClient.Service.IHttpService
+@inject IOrderClientService order
+<h3>AdminDashBoard</h3>
+
+
+<Button Color="Color.Primary" Clicked="@(async () => await HandleRedraw())">All Sales Per Make</Button>
+<Button Color="Color.Danger" Clicked="@(async () => await FilterTopSales())">Top 10 Sales Per Make</Button>
+<Button Color="Color.Info" Clicked="@(async () => await FilterLeastSales())">Top 10 Least Sold Makes</Button>
+<LineChart @ref="lineChart" TItem="double" />
+
+@code{
+    LineChart<double> lineChart;
+    Dictionary<string, int> Data = new Dictionary<string, int>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Data = await order.GetSalesStatsPerMake();
+        await lineChart.AddLabelsDatasetsAndUpdate( Data.Keys, GetLineChartDataset() );
+    }
+    protected override async Task OnAfterRenderAsync( bool firstRender )
+    {
+        if ( firstRender )
+        {
+            await HandleRedraw();
+        }
+    }
+    async Task FilterTopSales()
+    {
+        List<double> map = new List<double>();
+        var filter = Data.OrderByDescending(x => x.Value).Take(10).ToList();
+        List<string> label = new List<string>();
+        foreach (var item in filter)
+        {
+            map.Add(Convert.ToDouble(item.Value));
+            label.Add(item.Key);
+        }
+        var filterd = new LineChartDataset<double>
+            {
+                Label = "Remove || Reload",
+                Data = map,
+                BackgroundColor = backgroundColors,
+                BorderColor = borderColors,
+                Fill = true,
+                PointRadius = 3,
+                CubicInterpolationMode = "monotone",
+            };
+        await lineChart.Clear();
+
+        await lineChart.AddLabelsDatasetsAndUpdate( label, filterd );
+    }
+    async Task HandleRedraw()
+    {
+        await lineChart.Clear();
+
+        await lineChart.AddLabelsDatasetsAndUpdate( Data.Keys, GetLineChartDataset() );
+    }
+    async Task FilterLeastSales()
+    {
+        List<double> map = new List<double>();
+        var filter = Data.OrderBy(x => x.Value).Take(10).ToList();
+        List<string> label = new List<string>();
+        foreach (var item in filter)
+        {
+            map.Add(Convert.ToDouble(item.Value));
+            label.Add(item.Key);
+        }
+        var filterd = new LineChartDataset<double>
+            {
+                Label = "Remove || Reload",
+                Data = map,
+                BackgroundColor = backgroundColors,
+                BorderColor = borderColors,
+                Fill = true,
+                PointRadius = 3,
+                CubicInterpolationMode = "monotone",
+            };
+        await lineChart.Clear();
+
+        await lineChart.AddLabelsDatasetsAndUpdate( label, filterd );
+    }
+
+    LineChartDataset<double> GetLineChartDataset()
+    {
+        List<double> hej = new List<double>();
+        foreach (var item in Data)
+        {
+          hej.Add(Convert.ToDouble(item.Value));
+        }
+        return new LineChartDataset<double>
+        {
+            Label = "Remove || Reload",
+            Data = hej,
+            BackgroundColor = backgroundColors,
+            BorderColor = borderColors,
+            Fill = true,
+            PointRadius = 3,
+            CubicInterpolationMode = "monotone",
+        };
+    }
+
+    
+    List<string> backgroundColors = new List<string> { ChartColor.FromRgba( 255, 99, 132, 0.2f ), ChartColor.FromRgba( 54, 162, 235, 0.2f ), ChartColor.FromRgba( 255, 206, 86, 0.2f ), ChartColor.FromRgba( 75, 192, 192, 0.2f ), ChartColor.FromRgba( 153, 102, 255, 0.2f ), ChartColor.FromRgba( 255, 159, 64, 0.2f ) };
+    List<string> borderColors = new List<string> { ChartColor.FromRgba( 255, 99, 132, 1f ), ChartColor.FromRgba( 54, 162, 235, 1f ), ChartColor.FromRgba( 255, 206, 86, 1f ), ChartColor.FromRgba( 75, 192, 192, 1f ), ChartColor.FromRgba( 153, 102, 255, 1f ), ChartColor.FromRgba( 255, 159, 64, 1f ) };
+
+    
+}
+
+

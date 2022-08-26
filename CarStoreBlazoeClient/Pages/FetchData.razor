@@ -1,0 +1,63 @@
+﻿@page "/fetchdata"
+@using CarStoreBlazoeClient.Service.IHttpService
+@using Entities.Models
+@using global::Shared.DataTransferObjects
+@inject IProductClientService service;
+@inject IOrderClientService orderService;
+
+<PageTitle>Weather forecast</PageTitle>
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (products == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Make</th>
+                <th>Model</th>
+                <th>Year</th>
+                <th>Price $</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var car in products)
+            {
+                <tr>
+                    <td>@car.CarMake</td>
+                    <td>@car.CarModel</td>
+                    <td>@car.CarYear</td>
+                    <td>@car.Price</td>
+                    <td> <a class="mt-5 ms-5 btn btn-outline-primary" @onclick="()=>AddItemForCheckout(car)"><i class="oi oi-cart">&nbsp;&nbsp; Buy</i></a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    public List<ProductDto>? products = new List<ProductDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await service.GetAllProducts();
+        products = result.ToList();
+    }
+    private async Task AddItemForCheckout(ProductDto productDto)
+    {
+        Random random = new Random();
+        var quantity = random.Next(1, 10);
+
+        var sender = new OrderDto(TotalPrice: productDto.Price * quantity, CustomerId: random.Next(1,1000), Thing: productDto.Id,Quantity:quantity);
+        var send = orderService.CreateOrder(sender);
+
+    }
+
+    
+}
